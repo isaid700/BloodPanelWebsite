@@ -146,3 +146,28 @@ td:last-child {
   list-style-type: disc;
   padding-left: 20px;
 }
+
+.profile-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1000;
+}
+
+.profile-menu button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.profile-menu button:hover {
+  background-color: #c82333;
+}
