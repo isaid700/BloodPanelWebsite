@@ -1,63 +1,105 @@
-// src/App.js
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import authenticationData from './authentication_data.json';
-import Login from './Login';
-import MainPage from './MainPage';
+import patientData from './patient_data.json';
 import './App.css';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const bloodPanelResults = patientData.CBC_blood_panel_results;
+  const dates = Object.keys(bloodPanelResults);
+  const sortedDates = dates.sort((a, b) => b.localeCompare(a));
+  const [selectedDate, setSelectedDate] = useState(sortedDates[0]);
 
-  const handleLogin = (username, password) => {
-    if (
-      authenticationData[username] &&
-      authenticationData[username].password === password
-    ) {
-      setIsAuthenticated(true);
-      setCurrentUser(username);
-      return true; // Indicate successful login
-    } else {
-      alert('Incorrect username or password');
-      return false; // Indicate failed login
-    }
+  const handleDateChange = (event) => {
+    setSelectedDate(event.target.value);
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
+  const selectedPanel = bloodPanelResults[selectedDate];
+  const { Summary, ...measurements } = selectedPanel;
+
+  const [question, setQuestion] = useState('');
+  const [questionsList, setQuestionsList] = useState([]);
+
+  const handleQuestionChange = (event) => {
+    setQuestion(event.target.value);
   };
 
-  // Protected Route component
-  const ProtectedRoute = ({ children }) => {
-    if (!isAuthenticated) {
-      return <Navigate to="/" replace />;
+  const handleQuestionSubmit = (event) => {
+    event.preventDefault();
+    if (question.trim() !== '') {
+      setQuestionsList([...questionsList, question]);
+      setQuestion('');
+      // TODO: Send the question to your API here
     }
-    return children;
   };
 
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route
-            path="/"
-            element={<Login onLogin={handleLogin} />}
-          />
-          <Route
-            path="/main"
-            element={
-              <ProtectedRoute>
-                <MainPage currentUser={currentUser} handleLogout={handleLogout} />
-              </ProtectedRoute>
-            }
-          />
-          {/* Redirect any unknown routes to login */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </Router>
+    <div className="App">
+      <header className="App-header">
+        <div className="top-bar">
+          <div className="left">
+            <select value={selectedDate} onChange={handleDateChange}>
+              {sortedDates.map((date) => (
+                <option key={date} value={date}>
+                  {date}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="center">
+            <h1>Blood Panel {selectedDate}</h1>
+          </div>
+          <div className="right">
+            <button className="patient-name-button">{patientData.name}</button>
+          </div>
+        </div>
+      </header>
+      <main>
+        <div className="content">
+          <div className="table-container">
+            <h2>Test Results</h2>
+            <table>
+              <tbody>
+                {Object.entries(measurements).map(([measurement, [value, unit]]) => (
+                  <tr key={measurement}>
+                    <td>{measurement}</td>
+                    <td>
+                      {value}
+                      <span className="unit"> {unit}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="summary-container">
+            <h2>AI Summary</h2>
+            <div className="summary-text">{Summary}</div>
+            <h3>Ask a question about your results:</h3>
+            <form onSubmit={handleQuestionSubmit}>
+              <textarea
+                className="question-input"
+                rows="4"
+                placeholder="Type your question here..."
+                value={question}
+                onChange={handleQuestionChange}
+              ></textarea>
+              <button type="submit" className="submit-button">
+                Submit
+              </button>
+            </form>
+            {questionsList.length > 0 && (
+              <div className="questions-list">
+                <h3>Your Questions:</h3>
+                <ul>
+                  {questionsList.map((q, index) => (
+                    <li key={index}>{q}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
 
