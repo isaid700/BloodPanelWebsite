@@ -1,0 +1,100 @@
+{
+    "john_doe12": {
+        "patient_name": "John Doe",
+        "CBC_blood_panel_results": {
+            "2024-10-11": {
+                "Red Blood Cells (RBC)": [
+                    5.6,
+                    "million cells/mcL"
+                ],
+                "White Blood Cells (WBC)": [
+                    4.1,
+                    "thousand cells/mcL"
+                ],
+                "Hemoglobin": [
+                    15.1,
+                    "g/dL"
+                ],
+                "Hematocrit": [
+                    47.8,
+                    "%"
+                ],
+                "Platelets": [
+                    206.0,
+                    "thousand cells/mcL"
+                ]
+            },
+            "2024-09-11": {
+                "Red Blood Cells (RBC)": [
+                    5.4,
+                    "million cells/mcL"
+                ],
+                "White Blood Cells (WBC)": [
+                    8.8,
+                    "thousand cells/mcL"
+                ],
+                "Hemoglobin": [
+                    17.0,
+                    "g/dL"
+                ],
+                "Hematocrit": [
+                    45.6,
+                    "%"
+                ],
+                "Platelets": [
+                    260.0,
+                    "thousand cells/mcL"
+                ]
+            }
+        }
+    },
+    "jane_doe34": {
+        "patient_name": "Jane Doe",
+        "CBC_blood_panel_results": {
+            "2024-10-26": {
+                "Red Blood Cells (RBC)": [
+                    5.4,
+                    "million cells/mcL"
+                ],
+                "White Blood Cells (WBC)": [
+                    5.1,
+                    "thousand cells/mcL"
+                ],
+                "Hemoglobin": [
+                    16.8,
+                    "g/dL"
+                ],
+                "Hematocrit": [
+                    49.5,
+                    "%"
+                ],
+                "Platelets": [
+                    158.0,
+                    "thousand cells/mcL"
+                ]
+            },
+            "2024-09-26": {
+                "Red Blood Cells (RBC)": [
+                    4.8,
+                    "million cells/mcL"
+                ],
+                "White Blood Cells (WBC)": [
+                    4.1,
+                    "thousand cells/mcL"
+                ],
+                "Hemoglobin": [
+                    16.6,
+                    "g/dL"
+                ],
+                "Hematocrit": [
+                    48.7,
+                    "%"
+                ],
+                "Platelets": [
+                    311.0,
+                    "thousand cells/mcL"
+                ]
+            }
+        }
+    }
+}
