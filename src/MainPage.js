@@ -1,6 +1,6 @@
 // src/MainPage.js
 import React, { useState, useEffect } from 'react';
-import { getCbcSummary } from './openaiService';
+import axios from 'axios';
 import './App.css';
 
 function MainPage({ currentUser, handleLogout }) {
@@ -41,15 +41,33 @@ function MainPage({ currentUser, handleLogout }) {
     }
   };
 
-  useEffect(() => {
-    if (patientData) {
-      const results = patientData.CBC_blood_panel_results;
-      setBloodPanelResults(results);
-      const dates = Object.keys(results).sort((a, b) => b.localeCompare(a));
-      setSortedDates(dates);
-      setSelectedDate(dates[0]); // Set the most recent date
+  async function getCbcSummary(fhirData) {
+    try {
+      const response = await axios.post('/api/summary', { fhirData });
+      return response.data.summary; // Return the summary from the backend
+    } catch (error) {
+      console.error('Error fetching summary:', error.message);
+      throw error;
     }
-  }, [patientData]);
+  }
+
+  useEffect(() => {
+  const fetchSummary = async () => {
+    if (patientData && measurements) {
+      setIsLoadingSummary(true);
+      setSummaryError('');
+      try {
+        const summaryText = await getCbcSummary(measurements); // Pass the FHIR data to the backend
+        setSummary(summaryText); // Update state with the summary
+      } catch (error) {
+        setSummaryError('Failed to generate summary.');
+      } finally {
+        setIsLoadingSummary(false);
+      }
+    }
+  };
+  fetchSummary();
+}, [measurements, patientData]);
 
   useEffect(() => {
     if (bloodPanelResults && selectedDate) {
