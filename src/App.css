@@ -1,0 +1,173 @@
+/* Import the font */
+@import url('https://fonts.googleapis.com/css2?family=Inria+Serif&display=swap');
+
+.App {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 20px;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.top-bar .left {
+  flex: 1;
+  text-align: left;
+}
+
+.top-bar .center {
+  flex: 1;
+  text-align: center;
+}
+
+.top-bar .right {
+  flex: 1;
+  text-align: right;
+}
+
+.patient-name-button {
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.patient-name-button:hover {
+  background-color: #0056b3;
+}
+
+select {
+  padding: 10px;
+  font-size: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 36px;
+  font-family: 'Inria Serif', serif;
+}
+
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.table-container {
+  flex: 1;
+  max-width: 45%;
+  margin-right: 100px;
+}
+
+.summary-container {
+  flex: 1;
+  max-width: 16%;
+}
+
+.table-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.table-container table {
+  width: 100%;
+  margin: 0 auto;
+  border-collapse: collapse;
+}
+
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  font-size: 16px;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+td:first-child {
+  text-align: left;
+}
+
+td:last-child {
+  text-align: left;
+}
+
+.unit {
+  font-size: 12px;
+  color: #888;
+  margin-left: 5px;
+}
+
+.summary-text {
+  border: 1px solid #ddd;
+  padding: 10px;
+  height: 300px;
+  overflow-y: auto;
+  margin-bottom: 50px;
+  text-align: left;
+}
+
+.question-input {
+  width: 95%;
+  padding: 10px;
+  font-size: 16px;
+  resize: vertical;
+}
+
+.submit-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.submit-button:hover {
+  background-color: #218838;
+}
+
+.questions-list {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.questions-list ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.profile-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1000;
+}
+
+.profile-menu button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.profile-menu button:hover {
+  background-color: #c82333;
+}
