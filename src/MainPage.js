@@ -1,11 +1,17 @@
 // src/MainPage.js
 import React, { useState, useEffect } from 'react';
+import { updatePatientsData } from './updatePatientData';
 import axios from 'axios';
 import './App.css';
 
+
 function MainPage({ currentUser, handleLogout }) {
+
   const patientsData = require('./patients_data.json');
   const patientData = patientsData[currentUser];
+
+  const [patientsdata, setPatientsData] = useState(null); //change to capatilize 'data' when I get it correct
+  const [patientdata, setPatientData] = useState(null);  //change to capatilize 'data' when I get it correct
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [bloodPanelResults, setBloodPanelResults] = useState({});
@@ -50,6 +56,38 @@ function MainPage({ currentUser, handleLogout }) {
       throw error;
     }
   }
+
+  // Fetch data from backend
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await updatePatientsData(currentUser);
+        setPatientsData(data);
+      } catch (error) {
+        console.error('Error fetching patients data:', error);
+      }
+    }
+    fetchData();
+  }, []);
+
+  // Set data for current user
+  useEffect(() => {
+    if (patientsData && currentUser) {
+      setPatientData(patientsData[currentUser]);
+    }
+  }, [patientsData, currentUser]);
+
+  // Set blood panel results and dates
+  useEffect(() => {
+    if (patientData && patientData.CBC_blood_panel_results) {
+      setBloodPanelResults(patientData.CBC_blood_panel_results);
+      const dates = Object.keys(patientData.CBC_blood_panel_results).sort((a, b) => new Date(b) - new Date(a));
+      setSortedDates(dates);
+      if (dates.length > 0) {
+        setSelectedDate(dates[0]);
+      }
+    }
+  }, [patientData]);
 
   useEffect(() => {
   const fetchSummary = async () => {
