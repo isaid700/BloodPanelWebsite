@@ -1,9 +1,10 @@
 const express = require('express');
-const { getPatientJson, getSummary, getAllPatients } = require('../controller/controllers');
+const { getPatientJson, getSummary, getAllPatients, askQuestion } = require('../controller/controllers');
 const router = express.Router();
 
-router.get('/patient/:name', getPatientJson);
-router.post('/summary', getSummary);
-router.get('/patients', getAllPatients);
+router.get('/patients', getAllPatients); // Fetch all patients
+router.get('/patient/:name', getPatientJson); // Fetch single patient by name
+router.post('/summary', getSummary); // Generate AI summary
+router.post('/ask-question', askQuestion); // handles questions
 
 module.exports = router;

@@ -1,30 +1,28 @@
-// src/MainPage.js
 import React, { useState, useEffect } from 'react';
-import { updatePatientsData } from './updatePatientData';
 import axios from 'axios';
 import './App.css';
 
-
 function MainPage({ currentUser, handleLogout }) {
-
   const patientsData = require('./patients_data.json');
   const patientData = patientsData[currentUser];
 
-  const [patientsdata, setPatientsData] = useState(null); //change to capatilize 'data' when I get it correct
-  const [patientdata, setPatientData] = useState(null);  //change to capatilize 'data' when I get it correct
-
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [bloodPanelResults, setBloodPanelResults] = useState({});
-  const [sortedDates, setSortedDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
+  const [sortedDates, setSortedDates] = useState([]);
   const [measurements, setMeasurements] = useState({});
+  const [bloodPanelResults, setBloodPanelResults] = useState({});
 
   const [summary, setSummary] = useState('');
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState('');
 
+  const [answers, setAnswers] = useState([]);
+  const [isLoadingAnswer, setIsLoadingAnswer] = useState(false);
+  const [answerError, setAnswerError] = useState(null);
+
   const [question, setQuestion] = useState('');
   const [questionsList, setQuestionsList] = useState([]);
+  const [backendStatus, setBackendStatus] = useState('Checking connection...');
 
   const toggleProfileMenu = () => {
     setShowProfileMenu(!showProfileMenu);
@@ -38,97 +36,50 @@ function MainPage({ currentUser, handleLogout }) {
     setQuestion(event.target.value);
   };
 
-  const handleQuestionSubmit = (event) => {
+  const handleQuestionSubmit = async (event) => {
     event.preventDefault();
     if (question.trim() !== '') {
       setQuestionsList([...questionsList, question]);
+      setIsLoadingAnswer(true);
+      setAnswerError(null);
+      try {
+        const response = await axios.post('/api/ask-question', {
+          question: question,
+          fhirData: patientData // Assuming you have the patient's FHIR data stored in state
+        });
+        setAnswers([...answers, response.data.answer]);
+      } catch (error) {
+        console.error('Error asking question:', error);
+        setAnswerError('Failed to get an answer. Please try again.');
+      }
+      setIsLoadingAnswer(false);
       setQuestion('');
-      // TODO: Send the question to your API here
     }
   };
 
-  async function getCbcSummary(fhirData) {
-    try {
-      const response = await axios.post('/api/summary', { fhirData });
-      return response.data.summary; // Return the summary from the backend
-    } catch (error) {
-      console.error('Error fetching summary:', error.message);
-      throw error;
-    }
-  }
-
-  // Fetch data from backend
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await updatePatientsData(currentUser);
-        setPatientsData(data);
-      } catch (error) {
-        console.error('Error fetching patients data:', error);
-      }
-    }
-    fetchData();
-  }, []);
-
-  // Set data for current user
-  useEffect(() => {
-    if (patientsData && currentUser) {
-      setPatientData(patientsData[currentUser]);
-    }
-  }, [patientsData, currentUser]);
-
-  // Set blood panel results and dates
   useEffect(() => {
     if (patientData && patientData.CBC_blood_panel_results) {
-      setBloodPanelResults(patientData.CBC_blood_panel_results);
-      const dates = Object.keys(patientData.CBC_blood_panel_results).sort((a, b) => new Date(b) - new Date(a));
-      setSortedDates(dates);
-      if (dates.length > 0) {
-        setSelectedDate(dates[0]);
+      const dates = Object.keys(patientData.CBC_blood_panel_results);
+      const sorted = dates.sort((a, b) => new Date(b) - new Date(a));
+      setSortedDates(sorted);
+      if (sorted.length > 0 && !selectedDate) {
+        setSelectedDate(sorted[0]);
       }
     }
   }, [patientData]);
-
-  useEffect(() => {
-  const fetchSummary = async () => {
-    if (patientData && measurements) {
-      setIsLoadingSummary(true);
-      setSummaryError('');
-      try {
-        const summaryText = await getCbcSummary(measurements); // Pass the FHIR data to the backend
-        setSummary(summaryText); // Update state with the summary
-      } catch (error) {
-        setSummaryError('Failed to generate summary.');
-      } finally {
-        setIsLoadingSummary(false);
-      }
-    }
-  };
-  fetchSummary();
-}, [measurements, patientData]);
-
-  useEffect(() => {
-    if (bloodPanelResults && selectedDate) {
-      const panel = bloodPanelResults[selectedDate];
-      if (panel) {
-        const measurements = panel;
-        setMeasurements(measurements);
-      }
-    }
-  }, [bloodPanelResults, selectedDate]);
-
+  
   useEffect(() => {
     const fetchSummary = async () => {
       if (patientData && measurements) {
         setIsLoadingSummary(true);
         setSummaryError('');
         try {
-          const summaryText = await getCbcSummary(
-            patientData.patient_name,
-            measurements
-          );
-          setSummary(summaryText);
+          const response = await axios.post('/api/summary', {
+            fhirData: patientData // Ensure this matches the FHIR format expected by the backend
+          });
+          setSummary(response.data.summary);
         } catch (error) {
+          console.error('Error fetching summary:', error);
           setSummaryError('Failed to generate summary.');
         } finally {
           setIsLoadingSummary(false);
@@ -136,7 +87,30 @@ function MainPage({ currentUser, handleLogout }) {
       }
     };
     fetchSummary();
-  }, [measurements, patientData]);
+  }, [patientData, measurements]);
+
+  useEffect(() => {
+    if (patientData && patientData.CBC_blood_panel_results && selectedDate) {
+      const panel = patientData.CBC_blood_panel_results[selectedDate];
+      if (panel) {
+        setMeasurements(panel);
+      }
+    }
+  }, [patientData, selectedDate]);
+
+  useEffect(() => {
+    const testBackendConnection = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/test');
+        const data = await response.json();
+        setBackendStatus(data.message);
+      } catch (error) {
+        console.error('Error:', error);
+        setBackendStatus('Connection failed');
+      }
+    };
+    testBackendConnection();
+  }, []);
 
   return (
     <div>
@@ -168,25 +142,22 @@ function MainPage({ currentUser, handleLogout }) {
       </header>
       <main>
         <div className="content">
-          <div className="table-container">
-            <h2>Test Results</h2>
-            <table>
-              <tbody>
-                {measurements &&
-                  Object.entries(measurements).map(
-                    ([measurement, [value, unit]]) => (
-                      <tr key={measurement}>
-                        <td>{measurement}</td>
-                        <td>
-                          {value}
-                          <span className="unit"> {unit}</span>
-                        </td>
-                      </tr>
-                    )
-                  )}
-              </tbody>
-            </table>
-          </div>
+        <div className="table-container">
+          <h2>Test Results</h2>
+          <table>
+            <tbody>
+              {Object.entries(measurements).map(([measurement, [value, unit]]) => (
+                <tr key={measurement}>
+                  <td>{measurement}</td>
+                  <td>
+                    {value}
+                    <span className="unit"> {unit}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
           <div className="summary-container">
             <h2>AI Summary</h2>
             <div className="summary-text">
@@ -212,11 +183,16 @@ function MainPage({ currentUser, handleLogout }) {
               </button>
             </form>
             {questionsList.length > 0 && (
-              <div className="questions-list">
-                <h3>Your Questions:</h3>
+              <div className="questions-and-answers">
+                <h3>Your Questions and Answers:</h3>
                 <ul>
                   {questionsList.map((q, index) => (
-                    <li key={index}>{q}</li>
+                    <li key={index}>
+                      <strong>Q: {q}</strong>
+                      <p>A: {isLoadingAnswer && index === questionsList.length - 1 ? 'Loading answer...' : 
+                          answerError && index === questionsList.length - 1 ? answerError :
+                          answers[index] || 'No answer yet'}</p>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -224,6 +200,12 @@ function MainPage({ currentUser, handleLogout }) {
           </div>
         </div>
       </main>
+       <footer>
+      <div className="connection-status">
+        <h3>Backend Connection Status:</h3>
+        <p>{backendStatus}</p>
+      </div>
+    </footer>
     </div>
   );
 }

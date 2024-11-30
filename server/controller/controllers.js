@@ -1,14 +1,20 @@
-const Patient = require('../models/Patient');
+const Observation = require('../models/Observation');
 const { getChatGPTResponse } = require('../services/openaiService');
 
 exports.getPatientJson = async (req, res) => {
-  try {
-    const patient = await Patient.findOne({ 'identifier.value': req.params.id });
-    if (!patient) {
+  try 
+  {
+    const patient = await Observation.findOne({ 'subject.reference': `Patient/${req.params.name}` });
+
+    if (!patient) 
+    {
       return res.status(404).json({ error: 'Patient not found' });
-    } 
-    res.json(patient); // Return the entire patient object
-  } catch (error) {
+    }
+
+    res.json(patient);
+  } 
+  catch (error) 
+  {
     console.error('Error retrieving patient data:', error.message);
     res.status(500).json({ error: 'Error retrieving patient data' });
   }
@@ -16,13 +22,19 @@ exports.getPatientJson = async (req, res) => {
 
 exports.getSummary = async (req, res) => {
   const { fhirData } = req.body;
-  if (!fhirData) {
+
+  if (!fhirData) 
+  {
     return res.status(400).json({ error: 'FHIR data is required' });
   }
-  try {
+
+  try 
+  {
     const summary = await getChatGPTResponse(fhirData);
     res.json({ summary });
-  } catch (error) {
+  } 
+  catch (error) 
+  {
     console.error('Error generating summary:', error.message);
     res.status(500).json({ error: 'Failed to get summary' });
   }
@@ -30,33 +42,55 @@ exports.getSummary = async (req, res) => {
 
 exports.getAllPatients = async (req, res) => {
   try {
-    const patients = await Patient.find({});
-    const formattedData = {};
-    
-    patients.forEach(patient => {
-      const patientId = patient.identifier.find(id => id.system === 'http://example.com/patient-id').value;
-      formattedData[patientId] = {
-        patient_name: `${patient.name[0].given[0]} ${patient.name[0].family}`,
-        CBC_blood_panel_results: {}
-      };
-      
-      patient.observation.forEach(obs => {
-        if (obs.code.coding[0].system === 'http://loinc.org') {
-          const date = obs.effectiveDateTime.split('T')[0];
-          if (!formattedData[patientId].CBC_blood_panel_results[date]) {
-            formattedData[patientId].CBC_blood_panel_results[date] = {};
-          }
-          formattedData[patientId].CBC_blood_panel_results[date][obs.code.coding[0].display] = [
-            obs.valueQuantity.value,
-            obs.valueQuantity.unit
-          ];
-        }
+    const observations = await Observation.find({});
+    console.log('Observations from DB:', observations); // Log query results
+
+    const groupedPatients = observations.reduce((acc, obs) => {
+      const patientRef = obs.subject.reference || 'Patient/unknown';
+      const patientId = patientRef.split('/')[1] || 'unknown-id';
+
+      if (!acc[patientId]) {
+        acc[patientId] = {
+          id: patientId,
+          name: obs.subject.patient_name || 'Unknown Patient',
+          observations: [],
+        };
+      }
+
+      acc[patientId].observations.push({
+        id: obs.id,
+        date: obs.effectiveDateTime,
+        components: obs.component.map((comp) => ({
+          code: comp.code.coding[0]?.display || 'Unknown Code',
+          value: comp.valueQuantity?.value || 'N/A',
+          unit: comp.valueQuantity?.unit || 'N/A',
+        })),
       });
-    });
-    
-    res.json(formattedData);
+
+      return acc;
+    }, {});
+
+    console.log('Grouped Patients:', groupedPatients); // Log processed data
+    res.json(Object.values(groupedPatients));
   } catch (error) {
-    console.error('Error fetching all patients:', error);
-    res.status(500).json({ error: 'Error fetching all patients' });
+    console.error('Error retrieving patients:', error);
+    res.status(500).json({ error: 'Error retrieving patients', details: error.message });
+  }
+};
+
+//handles questions from frontend to chatgpt
+exports.askQuestion = async (req, res) => {
+  const { question, fhirData } = req.body;
+
+  if (!question || !fhirData) {
+    return res.status(400).json({ error: 'Question and FHIR data are required' });
+  }
+
+  try {
+    const answer = await getChatGPTResponse(question, fhirData);
+    res.json({ answer });
+  } catch (error) {
+    console.error('Error generating answer:', error.message);
+    res.status(500).json({ error: 'Failed to get answer' });
   }
 };

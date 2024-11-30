@@ -1,13 +1,11 @@
 import axios from 'axios';
 
-export async function updatePatientsData(currentUser) {
+export async function fetchPatientsData() {
   try {
-    const response = await axios.get(`/api/patients/${currentUser}`);
-    localStorage.setItem('patientsData', JSON.stringify(response.data));
-    console.log('Patients data updated successfully');
-    return response.data;
+    const response = await axios.get('/api/patients'); // Fetch parsed data from backend
+    return response.data; // Return the data
   } catch (error) {
-    console.error('Error updating patients data:', error);
+    console.error('Error fetching patients data:', error.message);
     throw error;
   }
 }
